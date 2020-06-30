@@ -44,7 +44,7 @@ def import_media(input_fn=None):
     if not os.path.exists(MEDIA_INDEX_PATH):
         print(MEDIA_INDEX_PATH)
         f_media_index = open(MEDIA_INDEX_PATH, "w+")
-        f_media_index.write("filename\tdigest\n")
+        f_media_index.write("digest\tfilename\n")
         f_media_index.close()
 
     input_abspath = os.path.abspath(input_fn)
@@ -58,21 +58,21 @@ def import_media(input_fn=None):
     if media_format not in ["wav", "mp3", "mp4"]:
         raise Exception(f"Unsupported format {media_format}.")
 
-    # Prevent duplicate.
+    # Prevent duplicates.
     with open(MEDIA_INDEX_PATH, 'r') as f_media_index:
         media_item = f_media_index.readline()
         while media_item:
             columns = media_item.split('\t')
-            media_abspath = columns[0]
-            media_digest = str(columns[1]).strip()
+            media_abspath = columns[1]
+            media_digest = str(columns[0]).strip()
             if media_digest == input_digest:
                 raise Exception(f"Already imported digest {media_digest} from {media_abspath}.")
             media_item = f_media_index.readline()
 
     # Index media.
     with open(MEDIA_INDEX_PATH, 'a') as f_media_index:
-        f_media_index.write(f'"{input_abspath}"\t{input_digest}\n')
-        print(f'"{input_fn}"\t{input_digest}')
+        f_media_index.write(f'{input_digest}\t"{input_abspath}"\n')
+        print(f'{input_digest}\t"{input_fn}"')
 
 
 if __name__ == "__main__":

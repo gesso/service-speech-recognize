@@ -1,5 +1,10 @@
+.DS_Store
 __pycache__
 *.pyc
 *.tar.gz
 *pb2*.py
 model
+
+# development
+__dev__
+__test__

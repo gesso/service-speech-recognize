@@ -8,10 +8,14 @@ import argparse
 import asyncio
 import websockets
 
-from tools import (
+from common.tools import (
     compute_digest,
     get_output_dir
 ) 
+
+BASE_PATH = os.path.join(os.path.expanduser("~"), '.sequencer')
+MEDIA_PATH = os.path.join(BASE_PATH, "input")
+MEDIA_INDEX_PATH = os.path.join(BASE_PATH, "media.index.csv")
 
 # Application service.
 ASR_SERVICE_PROTOCOL = "ws"
@@ -208,6 +212,21 @@ if __name__ == "__main__":
 
     if options.input_fn:
         print(f'input: {options.input_fn}')
+
+        # TODO: Check if `input_media` is checksum (else try filename).
+
+        """
+        # Lookup input media.
+        with open(MEDIA_INDEX_PATH, 'r') as f_media_index:
+            media_item = f_media_index.readline()
+            while media_item:
+                columns = media_item.split('\t')
+                media_abspath = columns[1]
+                media_digest = str(columns[0]).strip()
+                if media_digest == input_digest:
+                    raise Exception(f"Already imported digest {media_digest} from {media_abspath}.")
+                media_item = f_media_index.readline()
+        """
 
         # TODO: accept remote server port (optional),
         #       else try local server,

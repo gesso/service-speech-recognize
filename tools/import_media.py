@@ -3,12 +3,11 @@ import os
 import sys
 import argparse
 
-from tools import compute_digest
+from common.tools import compute_digest
 
-HOME_PATH = os.path.join(os.path.expanduser("~"), '.sequencer')
-INPUT_PATH = os.path.join(HOME_PATH, "input")
-
-MEDIA_INDEX_PATH = os.path.join(HOME_PATH, "media.index.csv")
+BASE_PATH = os.path.join(os.path.expanduser("~"), '.sequencer')
+MEDIA_PATH = os.path.join(BASE_PATH, "input")
+MEDIA_INDEX_PATH = os.path.join(BASE_PATH, "media.index.csv")
 
 def parse_options(argv):
     parser = argparse.ArgumentParser(
@@ -28,35 +27,33 @@ def parse_options(argv):
         action='store_true',
         help='normalize media filenames on disk'
     )
-    parser.add_argument(
-        '--no-copy',
-        dest='no_copy',
-        required=False,
-        action='store_false',
-        default=True,
-        help='import without copying'
-    )
 
     return parser.parse_args()
 
 
-def import_media(input_fn=None):
+def import_media(input_media=None):
+    # Initialize media index.
     if not os.path.exists(MEDIA_INDEX_PATH):
-        print(MEDIA_INDEX_PATH)
         f_media_index = open(MEDIA_INDEX_PATH, "w+")
-        f_media_index.write("digest\tfilename\n")
+        f_media_index.write("digest\tformat\tfilename\n")
         f_media_index.close()
 
-    input_abspath = os.path.abspath(input_fn)
+    # TODO: Verify input_media is a file.
+
+    input_abspath = os.path.abspath(input_media)
     input_digest = compute_digest(input_abspath)
 
-    input_root, input_ext = os.path.splitext(input_fn)
-    media_name = os.path.basename(input_root)
-    media_format = os.path.basename(input_ext[1:])
+    input_basepath, input_extension = os.path.splitext(input_media)
+    input_basename = os.path.basename(input_basepath)
+    input_format = input_extension[1:]
 
     # Validate input.
-    if media_format not in ["wav", "mp3", "mp4"]:
-        raise Exception(f"Unsupported format {media_format}.")
+    if input_format not in ["wav", "mp3", "mp4"]:
+        raise Exception(f"Unsupported input format {input_format}.")
+
+    # Import media.
+    import_abspath = os.path.join(MEDIA_PATH, f"{input_digest}.{input_format}")
+    os.system(f'cp "{input_abspath}" "{import_abspath}"')
 
     # Prevent duplicates.
     with open(MEDIA_INDEX_PATH, 'r') as f_media_index:
@@ -71,14 +68,14 @@ def import_media(input_fn=None):
 
     # Index media.
     with open(MEDIA_INDEX_PATH, 'a') as f_media_index:
-        f_media_index.write(f'{input_digest}\t"{input_abspath}"\n')
-        print(f'{input_digest}\t"{input_fn}"')
+        f_media_index.write(f'{input_digest}\t{input_format}\t"{input_basename}"\n')
+        print(f'{input_digest}\t"{input_media}"')
 
 
 if __name__ == "__main__":
     options = parse_options(sys.argv)
     try:
-        import_media(input_fn=options.input)
+        import_media(input=options.input)
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
